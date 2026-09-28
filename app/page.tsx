@@ -1,119 +1,288 @@
-import { createClient } from "@supabase/supabase-js";
-import Link from "next/link";
+'use client';
 
-export const revalidate = 60;
+import { useState } from 'react';
+import { createClient } from '@supabase/supabase-js';
+import Link from 'next/link';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-interface Product {
-  id: string;
-  title: string;
-  slug: string;
-  description: string;
-  brand: string;
-  affiliate_url: string;
-  image_url: string;
-  tags: string[];
-  is_featured: boolean;
-}
+const CATEGORIES = [
+  { label: 'Outerwear & Rain', value: 'outerwear' },
+  { label: 'Basics & Accessories', value: 'basics' },
+  { label: 'Surf & Coastal', value: 'surf' },
+  { label: "Men's Apparel", value: 'mens' },
+  { label: "Women's Apparel", value: 'womens' },
+];
 
-export default async function Home() {
-  const { data: products } = await supabase
-    .from("products")
-    .select("*")
-    .order("created_at", { ascending: false });
+export default function AdminPage() {
+  const [loading, setLoading] = useState(false);
+  const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const [formData, setFormData] = useState({
+    title: '',
+    slug: '',
+    brand: '',
+    retailer: '',
+    description: '',
+    image_url: '',
+    affiliate_url: '',
+    category: 'outerwear',
+    tags: '',
+    is_featured: false,
+  });
+
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const title = e.target.value;
+    const generatedSlug = title
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/[\s_-]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
+    setFormData((prev) => ({
+      ...prev,
+      title,
+      slug: prev.slug === '' || prev.slug === generatedSlug ? generatedSlug : prev.slug,
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setStatusMsg(null);
+
+    const tagsArray = formData.tags
+      .split(',')
+      .map((t) => t.trim())
+      .filter((t) => t.length > 0);
+
+    const productPayload = {
+      title: formData.title,
+      slug: formData.slug || formData.title.toLowerCase().replace(/ /g, '-'),
+      brand: formData.brand,
+      retailer: formData.retailer || 'Retailer',
+      description: formData.description,
+      image_url: formData.image_url,
+      affiliate_url: formData.affiliate_url,
+      category: formData.category,
+      tags: tagsArray,
+      is_featured: formData.is_featured,
+    };
+
+    const { error } = await supabase.from('products').insert([productPayload]);
+
+    setLoading(false);
+
+    if (error) {
+      console.error('Insert error:', error);
+      setStatusMsg({ type: 'error', text: `Failed to add product: ${error.message}` });
+    } else {
+      setStatusMsg({ type: 'success', text: 'Product successfully added to Supabase catalog!' });
+      setFormData({
+        title: '',
+        slug: '',
+        brand: '',
+        retailer: '',
+        description: '',
+        image_url: '',
+        affiliate_url: '',
+        category: 'outerwear',
+        tags: '',
+        is_featured: false,
+      });
+    }
+  };
 
   return (
-    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight text-neutral-900 sm:text-3xl">
-          Curated Coastal Gear & Wear
-        </h1>
-        <p className="mt-2 text-sm text-neutral-500">
-          Handpicked minimalist apparel and outdoor essentials built for the West Coast interface.
-        </p>
+    <main className="max-w-3xl mx-auto px-4 py-10">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-bold text-neutral-900">Admin: Add New Catalog Product</h1>
+          <p className="text-sm text-neutral-500 mt-1">
+            Instantly ingest products directly into your Supabase database.
+          </p>
+        </div>
+        <Link
+          href="/"
+          className="text-xs font-semibold text-neutral-600 hover:text-neutral-900 border border-neutral-300 rounded-lg px-3 py-2 transition"
+        >
+          ← Back to Catalog
+        </Link>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {products && products.length > 0 ? (
-          products.map((product: Product) => (
-            <div
-              key={product.id}
-              className="group bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between"
-            >
-              {/* Internal Product Detail Link */}
-              <Link href={`/products/${product.slug}`} className="block flex-1">
-                <div className="aspect-square relative w-full bg-neutral-100 overflow-hidden">
-                  <img
-                    src={product.image_url}
-                    alt={product.title}
-                    className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-300"
-                  />
-                  {product.brand && (
-                    <span className="absolute top-3 left-3 bg-black/60 backdrop-blur-md text-white text-xs font-medium px-2.5 py-1 rounded-full">
-                      {product.brand}
-                    </span>
-                  )}
-                </div>
+      {statusMsg && (
+        <div
+          className={`p-4 rounded-xl text-sm mb-6 ${
+            statusMsg.type === 'success'
+              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+              : 'bg-rose-50 text-rose-800 border border-rose-200'
+          }`}
+        >
+          {statusMsg.text}
+        </div>
+      )}
 
-                <div className="p-4">
-                  <h2 className="font-semibold text-neutral-900 text-base group-hover:text-emerald-800 transition line-clamp-1">
-                    {product.title}
-                  </h2>
-                  <p className="mt-1 text-xs text-neutral-500 line-clamp-2">
-                    {product.description}
-                  </p>
-                </div>
-              </Link>
+      <form onSubmit={handleSubmit} className="bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm space-y-6">
+        <div>
+          <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1">
+            Product Title *
+          </label>
+          <input
+            type="text"
+            required
+            value={formData.title}
+            onChange={handleTitleChange}
+            placeholder="e.g. Pacific Coast Rain Shell"
+            className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          />
+        </div>
 
-              {/* Card Footer Actions */}
-              <div className="p-4 pt-0">
-                <div className="pt-3 border-t border-neutral-100 flex items-center justify-between">
-                  <div className="flex gap-1 flex-wrap">
-                    {product.tags?.slice(0, 2).map((tag) => (
-                      <span
-                        key={tag}
-                        className="text-[10px] bg-neutral-100 text-neutral-600 px-2 py-0.5 rounded"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* External Merchant Link displaying Brand Name */}
-                  <a
-                    href={product.affiliate_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-800 hover:text-emerald-900 transition"
-                  >
-                    {product.brand ? `View on ${product.brand}` : 'View Retailer'}
-                    <svg
-                      className="w-3 h-3"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                      />
-                    </svg>
-                  </a>
-                </div>
-              </div>
-            </div>
-          ))
-        ) : (
-          <div className="col-span-full py-12 text-center text-neutral-500">
-            No products added yet.
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1">
+              Brand Name *
+            </label>
+            <input
+              type="text"
+              required
+              value={formData.brand}
+              onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+              placeholder="e.g. Patagonia, Nike, Vans"
+              className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
           </div>
-        )}
-      </div>
+
+          <div>
+            <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1">
+              Retailer Name *
+            </label>
+            <input
+              type="text"
+              required
+              value={formData.retailer}
+              onChange={(e) => setFormData({ ...formData, retailer: e.target.value })}
+              placeholder="e.g. Amazon, Huckberry, Backcountry"
+              className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1">
+            URL Slug
+          </label>
+          <input
+            type="text"
+            value={formData.slug}
+            onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+            placeholder="pacific-coast-rain-shell"
+            className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm bg-neutral-50 text-neutral-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          />
+          <span className="text-[11px] text-neutral-400 mt-1 block">Auto-generated from title if left blank.</span>
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1">
+            Description *
+          </label>
+          <textarea
+            required
+            rows={3}
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            placeholder="Brief product summary highlighting materials, fit, or weather performance..."
+            className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1">
+              Image URL *
+            </label>
+            <input
+              type="url"
+              required
+              value={formData.image_url}
+              onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+              placeholder="https://images.unsplash.com/..."
+              className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1">
+              Affiliate / Retailer URL *
+            </label>
+            <input
+              type="url"
+              required
+              value={formData.affiliate_url}
+              onChange={(e) => setFormData({ ...formData, affiliate_url: e.target.value })}
+              placeholder="https://amazon.com/dp/..."
+              className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1">
+              Category
+            </label>
+            <select
+              value={formData.category}
+              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            >
+              {CATEGORIES.map((cat) => (
+                <option key={cat.value} value={cat.value}>
+                  {cat.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1">
+              Tags (Comma-Separated)
+            </label>
+            <input
+              type="text"
+              value={formData.tags}
+              onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+              placeholder="Men's, Outerwear & Rain, Waterproof"
+              className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 pt-2">
+          <input
+            type="checkbox"
+            id="is_featured"
+            checked={formData.is_featured}
+            onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
+            className="h-4 w-4 rounded border-neutral-300 text-emerald-600 focus:ring-emerald-500"
+          />
+          <label htmlFor="is_featured" className="text-sm font-medium text-neutral-700 select-none">
+            Mark as Featured Product
+          </label>
+        </div>
+
+        <div className="pt-4 border-t border-neutral-100 flex justify-end">
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-neutral-900 hover:bg-neutral-800 disabled:opacity-50 text-white font-medium px-6 py-2.5 rounded-xl text-sm transition shadow-sm"
+          >
+            {loading ? 'Adding Product...' : 'Publish Product to Catalog'}
+          </button>
+        </div>
+      </form>
     </main>
   );
 }
