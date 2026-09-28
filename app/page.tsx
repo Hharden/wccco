@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import Image from "next/image";
+import Link from "next/link";
 
 // Revalidate grid every 60 seconds (ISR)
 export const revalidate = 60;
@@ -13,6 +13,7 @@ interface Product {
   title: string;
   slug: string;
   description: string;
+  price: number;
   brand: string;
   affiliate_url: string;
   image_url: string;
@@ -42,32 +43,43 @@ export default async function Home() {
           products.map((product: Product) => (
             <div
               key={product.id}
-              className="group relative bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col"
+              className="group bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between"
             >
-              <div className="aspect-square relative w-full bg-neutral-100 overflow-hidden">
-                <img
-                  src={product.image_url}
-                  alt={product.title}
-                  className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-300"
-                />
-                {product.brand && (
-                  <span className="absolute top-3 left-3 bg-black/60 backdrop-blur-md text-white text-xs font-medium px-2.5 py-1 rounded-full">
-                    {product.brand}
-                  </span>
-                )}
-              </div>
+              {/* Internal Product Detail Link */}
+              <Link href={`/products/${product.slug}`} className="block flex-1">
+                <div className="aspect-square relative w-full bg-neutral-100 overflow-hidden">
+                  <img
+                    src={product.image_url}
+                    alt={product.title}
+                    className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-300"
+                  />
+                  {product.brand && (
+                    <span className="absolute top-3 left-3 bg-black/60 backdrop-blur-md text-white text-xs font-medium px-2.5 py-1 rounded-full">
+                      {product.brand}
+                    </span>
+                  )}
+                </div>
 
-              <div className="p-4 flex-1 flex flex-col justify-between">
-                <div>
-                  <h2 className="font-semibold text-neutral-900 text-base group-hover:text-emerald-800 transition line-clamp-1">
-                    {product.title}
-                  </h2>
+                <div className="p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <h2 className="font-semibold text-neutral-900 text-base group-hover:text-emerald-800 transition line-clamp-1">
+                      {product.title}
+                    </h2>
+                    {product.price && (
+                      <span className="font-bold text-neutral-900 text-sm">
+                        ${product.price}
+                      </span>
+                    )}
+                  </div>
                   <p className="mt-1 text-xs text-neutral-500 line-clamp-2">
                     {product.description}
                   </p>
                 </div>
+              </Link>
 
-                <div className="mt-4 pt-3 border-t border-neutral-100 flex items-center justify-between">
+              {/* Card Footer Actions */}
+              <div className="p-4 pt-0">
+                <div className="pt-3 border-t border-neutral-100 flex items-center justify-between">
                   <div className="flex gap-1 flex-wrap">
                     {product.tags?.slice(0, 2).map((tag) => (
                       <span
@@ -78,6 +90,8 @@ export default async function Home() {
                       </span>
                     ))}
                   </div>
+
+                  {/* External Merchant Affiliate Link */}
                   <a
                     href={product.affiliate_url}
                     target="_blank"
