@@ -25,7 +25,6 @@ export default function AdminPage() {
     slug: '',
     brand: '',
     description: '',
-    price: '',
     image_url: '',
     affiliate_url: '',
     category: 'outerwear',
@@ -33,7 +32,6 @@ export default function AdminPage() {
     is_featured: false,
   });
 
-  // Auto-generate a clean slug from the title if slug is empty
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const title = e.target.value;
     const generatedSlug = title
@@ -55,7 +53,6 @@ export default function AdminPage() {
     setLoading(true);
     setStatusMsg(null);
 
-    // Convert comma-separated tags into an array
     const tagsArray = formData.tags
       .split(',')
       .map((t) => t.trim())
@@ -66,7 +63,6 @@ export default function AdminPage() {
       slug: formData.slug || formData.title.toLowerCase().replace(/ /g, '-'),
       brand: formData.brand,
       description: formData.description,
-      price: parseFloat(formData.price) || 0,
       image_url: formData.image_url,
       affiliate_url: formData.affiliate_url,
       category: formData.category,
@@ -83,13 +79,11 @@ export default function AdminPage() {
       setStatusMsg({ type: 'error', text: `Failed to add product: ${error.message}` });
     } else {
       setStatusMsg({ type: 'success', text: 'Product successfully added to Supabase catalog!' });
-      // Reset form
       setFormData({
         title: '',
         slug: '',
         brand: '',
         description: '',
-        price: '',
         image_url: '',
         affiliate_url: '',
         category: 'outerwear',
@@ -146,48 +140,31 @@ export default function AdminPage() {
 
           <div>
             <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1">
-              Brand Name *
+              Brand / Retailer Name *
             </label>
             <input
               type="text"
               required
               value={formData.brand}
               onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-              placeholder="e.g. Patagonia"
+              placeholder="e.g. Amazon, Patagonia, Huckberry"
               className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1">
-              URL Slug
-            </label>
-            <input
-              type="text"
-              value={formData.slug}
-              onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-              placeholder="pacific-coast-rain-shell"
-              className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm bg-neutral-50 text-neutral-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            />
-            <span className="text-[11px] text-neutral-400 mt-1 block">Auto-generated from title if left blank.</span>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1">
-              Price ($) *
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              required
-              value={formData.price}
-              onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-              placeholder="129.99"
-              className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            />
-          </div>
+        <div>
+          <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1">
+            URL Slug
+          </label>
+          <input
+            type="text"
+            value={formData.slug}
+            onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+            placeholder="pacific-coast-rain-shell"
+            className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm bg-neutral-50 text-neutral-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          />
+          <span className="text-[11px] text-neutral-400 mt-1 block">Auto-generated from title if left blank.</span>
         </div>
 
         <div>
