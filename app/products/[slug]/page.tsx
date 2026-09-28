@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import ReactMarkdown from "react-markdown";
 
 export const revalidate = 60;
 
@@ -23,7 +24,7 @@ export default async function ProductDetailPage({
     notFound();
   }
 
-  const retailerName = product.retailer || "Retailer";
+  const retailerName = product.retailer || product.brand || "Retailer";
 
   return (
     <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -66,9 +67,20 @@ export default async function ProductDetailPage({
               {product.title}
             </h1>
 
-            <p className="mt-4 text-sm leading-relaxed text-neutral-600">
-              {product.description}
-            </p>
+            {/* Formatted Description with ReactMarkdown */}
+            <div className="mt-4 text-sm leading-relaxed text-neutral-600">
+              <ReactMarkdown
+                components={{
+                  ul: ({ children }) => (
+                    <ul className="list-disc pl-5 my-3 space-y-1">{children}</ul>
+                  ),
+                  li: ({ children }) => <li className="text-neutral-600">{children}</li>,
+                  p: ({ children }) => <p className="mb-2">{children}</p>,
+                }}
+              >
+                {product.description}
+              </ReactMarkdown>
+            </div>
 
             {product.tags && product.tags.length > 0 && (
               <div className="mt-6 flex flex-wrap gap-2">
