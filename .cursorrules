@@ -1,0 +1,33 @@
+# West Coast Clothing Co. — Development Rules & Stack Standards
+
+## Tech Stack & Core Dependencies
+- Framework: Next.js 15 (App Router, Server Components by default)
+- UI / Styling: Tailwind CSS, Lucide React icons (`lucide-react@^0.444.0`)
+- Markdown Rendering: `react-markdown` (`^10.1.0`)
+- Backend & Auth: Supabase (`@supabase/supabase-js`)
+- Deployment: Vercel auto-deploys from GitHub `main` branch
+
+## Project Architecture & Routing
+- `app/page.tsx`: Catalog homepage / product grid
+- `app/products/[slug]/page.tsx`: Dynamic Product Detail Page (PDP)
+- `app/Header.tsx`: Global navigation header
+- `app/layout.tsx`: Root layout shell
+- `app/globals.css`: Global Tailwind styles & font declarations
+
+## Supabase Schema: `products`
+Columns expected on the `products` table:
+- `id` (uuid)
+- `title` (text)
+- `slug` (text, unique)
+- `description` (text, formatted with Markdown / bullet lists)
+- `image_url` (text)
+- `affiliate_url` (text)
+- `brand` (text, e.g. "Patagonia", "Brixton")
+- `retailer` (text, e.g. "REI", "Backcountry")
+- `tags` (array of text)
+
+## Design System & UI Conventions
+- Primary Accent: `emerald-800` (hover: `emerald-900`) for CTAs, retailer tags, and brand badges.
+- Neutral Palette: Clean white containers (`bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm`) over light neutral backgrounds (`bg-neutral-50` / `bg-neutral-100`).
+- Typography: Clean sans-serif hierarchy; subtext/metadata using `text-xs font-semibold text-neutral-500`.
+- Rich Text Formatting: Always wrap product descriptions in `<ReactMarkdown>` with custom component overrides for unordered lists (`ul`), list items (`li`), and paragraphs (`p`).
