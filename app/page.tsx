@@ -1,7 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 
-// Revalidate grid every 60 seconds (ISR)
 export const revalidate = 60;
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
@@ -13,7 +12,6 @@ interface Product {
   title: string;
   slug: string;
   description: string;
-  price: number;
   brand: string;
   affiliate_url: string;
   image_url: string;
@@ -61,16 +59,9 @@ export default async function Home() {
                 </div>
 
                 <div className="p-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <h2 className="font-semibold text-neutral-900 text-base group-hover:text-emerald-800 transition line-clamp-1">
-                      {product.title}
-                    </h2>
-                    {product.price && (
-                      <span className="font-bold text-neutral-900 text-sm">
-                        ${product.price}
-                      </span>
-                    )}
-                  </div>
+                  <h2 className="font-semibold text-neutral-900 text-base group-hover:text-emerald-800 transition line-clamp-1">
+                    {product.title}
+                  </h2>
                   <p className="mt-1 text-xs text-neutral-500 line-clamp-2">
                     {product.description}
                   </p>
@@ -91,14 +82,14 @@ export default async function Home() {
                     ))}
                   </div>
 
-                  {/* External Merchant Affiliate Link */}
+                  {/* External Merchant Link displaying Brand Name */}
                   <a
                     href={product.affiliate_url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-800 hover:text-emerald-900 transition"
                   >
-                    View Merchant
+                    {product.brand ? `View on ${product.brand}` : 'View Retailer'}
                     <svg
                       className="w-3 h-3"
                       fill="none"
@@ -119,7 +110,7 @@ export default async function Home() {
           ))
         ) : (
           <div className="col-span-full py-12 text-center text-neutral-500">
-            No products added yet. Ingest items in your Supabase dashboard to see them live here!
+            No products added yet.
           </div>
         )}
       </div>
