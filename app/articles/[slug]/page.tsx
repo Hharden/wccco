@@ -12,30 +12,25 @@ const mdxComponents = {
 
 // Helper function to fetch single article MDX by slug
 async function getArticleBySlug(slug: string) {
-  const articlesDirectory = path.join(
-    process.cwd(),
-    "app",
-    "content",
-    "articles"
-  );
-  const filePath = path.join(articlesDirectory, `${slug}.mdx`);
-
-  if (!fs.existsSync(filePath)) {
-    return null;
+    const articlesDirectory = path.join(process.cwd(), "app", "content", "articles");
+    const filePath = path.join(articlesDirectory, `${slug}.mdx`);
+  
+    if (!fs.existsSync(filePath)) {
+      return null;
+    }
+  
+    const fileContent = fs.readFileSync(filePath, "utf-8");
+    const { data, content } = matter(fileContent);
+  
+    return {
+      slug,
+      title: data.title,
+      description: data.description,
+      publishedAt: data.publishedAt,
+      coverImage: data.coverImage,
+      content,
+    };
   }
-
-  const fileContent = fs.readFileSync(filePath, "utf-8");
-  const { data, content } = matter(fileContent);
-
-  return {
-    slug,
-    title: data.title,
-    description: data.description,
-    publishedAt: data.publishedAt,
-    coverImage: data.coverImage,
-    content,
-  };
-}
 
 // 1. Generate Dynamic SEO Metadata
 export async function generateMetadata({
