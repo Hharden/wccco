@@ -5,12 +5,19 @@ import { notFound } from "next/navigation";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import ArticleProductCard from "../../../components/ArticleProductCard";
 
+// MDX Custom Component Mapping
 const mdxComponents = {
   ArticleProductCard,
 };
 
+// Helper function to fetch single article MDX by slug
 async function getArticleBySlug(slug: string) {
-    const articlesDirectory = path.join(process.cwd(), "app", "content", "articles");
+  const articlesDirectory = path.join(
+    process.cwd(),
+    "app",
+    "content",
+    "articles"
+  );
   const filePath = path.join(articlesDirectory, `${slug}.mdx`);
 
   if (!fs.existsSync(filePath)) {
@@ -30,6 +37,7 @@ async function getArticleBySlug(slug: string) {
   };
 }
 
+// 1. Generate Dynamic SEO Metadata
 export async function generateMetadata({
   params,
 }: {
@@ -51,6 +59,7 @@ export async function generateMetadata({
   };
 }
 
+// 2. Main Article Page Component
 export default async function ArticlePage({
   params,
 }: {
@@ -72,7 +81,9 @@ export default async function ArticlePage({
         </h1>
 
         {article.publishedAt && (
-          <p className="text-sm text-neutral-500 mt-2">{article.publishedAt}</p>
+          <p className="text-sm text-neutral-500 mt-2">
+            {article.publishedAt}
+          </p>
         )}
       </div>
 
