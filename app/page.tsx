@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
+import ProductCard from "../components/ProductCard";
 
 export const revalidate = 60;
 
@@ -7,114 +8,87 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-interface Product {
-  id: string;
-  title: string;
-  slug: string;
-  description: string;
-  brand: string;
-  retailer?: string;
-  affiliate_url: string;
-  image_url: string;
-  tags: string[];
-  is_featured: boolean;
-}
+const featuredArticle = {
+  title: "The Ultimate Pacific Northwest Rainwear Guide",
+  slug: "pnw-rainwear-guide",
+  description: "How to stay dry and stylish during coastal drizzle and torrential downpours.",
+  coverImage: "https://images.unsplash.com/photo-1544441893-675973e31985?w=1200&q=80",
+};
 
-export default async function Home() {
-  const { data: products } = await supabase
-    .from("products")
-    .select("*")
-    .order("created_at", { ascending: false });
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string }>;
+}) {
+  const resolvedParams = await searchParams;
+  const category = resolvedParams?.category;
+
+  let query = supabase.from("products").select("*");
+
+  if (category && category !== "all") {
+    query = query.contains("tags", [category]);
+  }
+
+  const { data: products } = await query;
 
   return (
-    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Header Banner */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight text-neutral-900 sm:text-3xl">
+        <h1 className="text-3xl font-bold text-neutral-900">
           Curated Coastal Gear & Wear
         </h1>
-        <p className="mt-2 text-sm text-neutral-500">
+        <p className="text-sm text-neutral-500 mt-1">
           Handpicked minimalist apparel and outdoor essentials built for the West Coast interface.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {products && products.length > 0 ? (
-          products.map((product: Product) => (
-            <div
-              key={product.id}
-              className="group bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between"
+      {/* Featured Article Hero Section */}
+      <section className="mb-12">
+        <div className="relative rounded-2xl overflow-hidden bg-neutral-900 text-white group">
+          <img
+            src={featuredArticle.coverImage}
+            alt={featuredArticle.title}
+            className="w-full h-80 object-cover opacity-60 group-hover:scale-105 transition duration-500"
+          />
+          <div className="absolute inset-0 p-8 flex flex-col justify-end bg-gradient-to-t from-black/80 via-black/20 to-transparent">
+            <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">
+              Featured Article
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-bold mt-1">
+              {featuredArticle.title}
+            </h2>
+            <p className="text-sm text-neutral-300 mt-2 max-w-2xl">
+              {featuredArticle.description}
+            </p>
+            <Link
+              href={`/articles/${featuredArticle.slug}`}
+              className="mt-4 inline-flex items-center text-sm font-semibold text-white hover:underline"
             >
-              {/* Product Card Body Link */}
-              <Link href={`/products/${product.slug}`} className="block flex-1">
-                <div className="aspect-square relative w-full bg-neutral-100 overflow-hidden">
-                  <img
-                    src={product.image_url}
-                    alt={product.title}
-                    className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-300"
-                  />
-                  {product.brand && (
-                    <span className="absolute top-3 left-3 bg-black/60 backdrop-blur-md text-white text-xs font-medium px-2.5 py-1 rounded-full">
-                      {product.brand}
-                    </span>
-                  )}
-                </div>
-
-                <div className="p-4">
-                  <h2 className="font-semibold text-neutral-900 text-base group-hover:text-emerald-800 transition line-clamp-1">
-                    {product.title}
-                  </h2>
-                  <p className="mt-1 text-xs text-neutral-500 line-clamp-2">
-                    {product.description}
-                  </p>
-                </div>
-              </Link>
-
-              {/* Card Footer Actions */}
-              <div className="p-4 pt-0">
-                <div className="pt-3 border-t border-neutral-100 flex items-center justify-between">
-                  <div className="flex gap-1 flex-wrap">
-                    {product.tags?.slice(0, 2).map((tag) => (
-                      <span
-                        key={tag}
-                        className="text-[10px] bg-neutral-100 text-neutral-600 px-2 py-0.5 rounded"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* External Retailer Link */}
-                  <a
-                    href={product.affiliate_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-800 hover:text-emerald-900 transition"
-                  >
-                    View on {product.retailer || 'Retailer'}
-                    <svg
-                      className="w-3 h-3"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                      />
-                    </svg>
-                  </a>
-                </div>
-              </div>
-            </div>
-          ))
-        ) : (
-          <div className="col-span-full py-12 text-center text-neutral-500">
-            No products added yet.
+              Read Guide →
+            </Link>
           </div>
-        )}
-      </div>
+        </div>
+      </section>
+
+      {/* Product Grid */}
+      {!products || products.length === 0 ? (
+        <div className="text-center py-20 bg-white border border-neutral-200 rounded-2xl">
+          <p className="text-neutral-500 text-sm">No products found in this category.</p>
+          <Link
+            href="/"
+            className="inline-block mt-4 text-xs font-semibold text-emerald-800 hover:underline"
+          >
+            Clear Filters
+          </Link>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {products.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      )}
     </main>
   );
 }
