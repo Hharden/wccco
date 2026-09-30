@@ -24,6 +24,7 @@ export default function AdminPage() {
     title: '',
     slug: '',
     brand: '',
+    merchant_id: '',
     description: '',
     image_url: '',
     affiliate_url: '',
@@ -62,6 +63,7 @@ export default function AdminPage() {
       title: formData.title,
       slug: formData.slug || formData.title.toLowerCase().replace(/ /g, '-'),
       brand: formData.brand,
+      merchant_id: formData.merchant_id || 'amazon',
       description: formData.description,
       image_url: formData.image_url,
       affiliate_url: formData.affiliate_url,
@@ -83,6 +85,7 @@ export default function AdminPage() {
         title: '',
         slug: '',
         brand: '',
+        merchant_id: '',
         description: '',
         image_url: '',
         affiliate_url: '',
@@ -123,31 +126,44 @@ export default function AdminPage() {
       )}
 
       <form onSubmit={handleSubmit} className="bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm space-y-6">
+        <div>
+          <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1">
+            Product Title *
+          </label>
+          <input
+            type="text"
+            required
+            value={formData.title}
+            onChange={handleTitleChange}
+            placeholder="e.g. Pacific Coast Rain Shell"
+            className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          />
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1">
-              Product Title *
-            </label>
-            <input
-              type="text"
-              required
-              value={formData.title}
-              onChange={handleTitleChange}
-              placeholder="e.g. Pacific Coast Rain Shell"
-              className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1">
-              Brand / Retailer Name *
+              Brand Name *
             </label>
             <input
               type="text"
               required
               value={formData.brand}
               onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-              placeholder="e.g. Amazon, Patagonia, Huckberry"
+              placeholder="e.g. Patagonia, Columbia, Levi's"
+              className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1">
+              Retailer / Merchant Name
+            </label>
+            <input
+              type="text"
+              value={formData.merchant_id}
+              onChange={(e) => setFormData({ ...formData, merchant_id: e.target.value })}
+              placeholder="e.g. Amazon, Huckberry, REI (Defaults to Amazon)"
               className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
