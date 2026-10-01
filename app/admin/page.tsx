@@ -1,48 +1,33 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
+import { CATEGORY_TREE } from '../constants/categories';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-const SECTIONS = [
-  { label: "Men's", value: 'mens' },
-  { label: "Women's", value: 'womens' },
-];
-
-const CATEGORIES = [
-  { label: 'Clothing', value: 'clothing' },
-  { label: 'Outerwear', value: 'outerwear' },
-  { label: 'Basics', value: 'basics' },
-  { label: 'Surf', value: 'surf' },
-];
-
-const SUBCATEGORIES: Record<string, { label: string; value: string }[]> = {
-  clothing: [
-    { label: 'Jackets & Coats', value: 'jackets-coats' },
-    { label: 'Shirts & Tops', value: 'shirts-tops' },
-    { label: 'Pants & Bottoms', value: 'pants-bottoms' },
-  ],
-  outerwear: [
-    { label: 'Rain Jackets', value: 'rain-jackets' },
-    { label: 'Parkas', value: 'parkas' },
-  ],
-  basics: [
-    { label: 'T-Shirts', value: 't-shirts' },
-    { label: 'Hoodies & Sweatshirts', value: 'hoodies-sweatshirts' },
-  ],
-  surf: [
-    { label: 'Boardshorts', value: 'boardshorts' },
-    { label: 'Wetsuits', value: 'wetsuits' },
-  ],
-};
-
 export default function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // 1. Dynamically derive Sections from CATEGORY_TREE
+  const SECTIONS = useMemo(() => {
+    return CATEGORY_TREE.map((sec) => ({
+      label: sec.name,
+      value: sec.slug,
+    }));
+  }, []);
+
+  // Set default initial state based on the first section in CATEGORY_TREE
+  const initialSection = SECTIONS[0]?.value || '';
+  const initialSectionData = CATEGORY_TREE.find((s) => s.slug === initialSection);
+  const initialCategories = initialSectionData?.categories || [];
+  const initialCategory = initialCategories[0]?.slug || '';
+  const initialCategoryData = initialCategories.find((c) => c.slug === initialCategory);
+  const initialSubcategory = initialCategoryData?.subcategories?.[0]?.slug || '';
 
   const [formData, setFormData] = useState({
     title: '',
@@ -52,12 +37,31 @@ export default function AdminPage() {
     description: '',
     image_url: '',
     affiliate_url: '',
-    section: 'mens',
-    category: 'clothing',
-    subcategory_slug: 'jackets-coats',
+    section: initialSection,
+    category: initialCategory,
+    subcategory_slug: initialSubcategory,
     tags: '',
     is_featured: false,
   });
+
+  // 2. Dynamically derive available Categories based on currently selected Section
+  const availableCategories = useMemo(() => {
+    const currentSection = CATEGORY_TREE.find((s) => s.slug === formData.section);
+    return (currentSection?.categories || []).map((cat) => ({
+      label: cat.name,
+      value: cat.slug,
+    }));
+  }, [formData.section]);
+
+  // 3. Dynamically derive available Subcategories based on selected Section and Category
+  const availableSubcategories = useMemo(() => {
+    const currentSection = CATEGORY_TREE.find((s) => s.slug === formData.section);
+    const currentCat = currentSection?.categories?.find((c) => c.slug === formData.category);
+    return (currentCat?.subcategories || []).map((sub) => ({
+      label: sub.name,
+      value: sub.slug,
+    }));
+  }, [formData.section, formData.category]);
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const title = e.target.value;
@@ -75,15 +79,33 @@ export default function AdminPage() {
     }));
   };
 
-  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newCategory = e.target.value;
-    const availableSubcategories = SUBCATEGORIES[newCategory] || [];
-    const firstSubcategory = availableSubcategories[0]?.value || '';
+  // When Section changes, reset Category and Subcategory to the first available options
+  const handleSectionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newSectionSlug = e.target.value;
+    const newSectionData = CATEGORY_TREE.find((s) => s.slug === newSectionSlug);
+    const firstCategory = newSectionData?.categories?.[0];
+    const firstCategorySlug = firstCategory?.slug || '';
+    const firstSubcategorySlug = firstCategory?.subcategories?.[0]?.slug || '';
 
     setFormData((prev) => ({
       ...prev,
-      category: newCategory,
-      subcategory_slug: firstSubcategory,
+      section: newSectionSlug,
+      category: firstCategorySlug,
+      subcategory_slug: firstSubcategorySlug,
+    }));
+  };
+
+  // When Category changes, reset Subcategory to the first available option
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newCategorySlug = e.target.value;
+    const currentSectionData = CATEGORY_TREE.find((s) => s.slug === formData.section);
+    const newCategoryData = currentSectionData?.categories?.find((c) => c.slug === newCategorySlug);
+    const firstSubcategorySlug = newCategoryData?.subcategories?.[0]?.slug || '';
+
+    setFormData((prev) => ({
+      ...prev,
+      category: newCategorySlug,
+      subcategory_slug: firstSubcategorySlug,
     }));
   };
 
@@ -129,9 +151,9 @@ export default function AdminPage() {
         description: '',
         image_url: '',
         affiliate_url: '',
-        section: 'mens',
-        category: 'clothing',
-        subcategory_slug: 'jackets-coats',
+        section: initialSection,
+        category: initialCategory,
+        subcategory_slug: initialSubcategory,
         tags: '',
         is_featured: false,
       });
@@ -276,7 +298,7 @@ export default function AdminPage() {
             </label>
             <select
               value={formData.section}
-              onChange={(e) => setFormData({ ...formData, section: e.target.value })}
+              onChange={handleSectionChange}
               className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
             >
               <option value="">None</option>
@@ -297,7 +319,8 @@ export default function AdminPage() {
               onChange={handleCategoryChange}
               className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
             >
-              {CATEGORIES.map((cat) => (
+              <option value="">None</option>
+              {availableCategories.map((cat) => (
                 <option key={cat.value} value={cat.value}>
                   {cat.label}
                 </option>
@@ -315,7 +338,7 @@ export default function AdminPage() {
               className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
             >
               <option value="">None</option>
-              {(SUBCATEGORIES[formData.category] || []).map((sub) => (
+              {availableSubcategories.map((sub) => (
                 <option key={sub.value} value={sub.value}>
                   {sub.label}
                 </option>
