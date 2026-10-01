@@ -8,13 +8,37 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-const CATEGORIES = [
-  { label: 'Outerwear & Rain', value: 'outerwear' },
-  { label: 'Basics & Accessories', value: 'basics' },
-  { label: 'Surf & Coastal', value: 'surf' },
-  { label: "Men's Apparel", value: 'mens' },
-  { label: "Women's Apparel", value: 'womens' },
+const SECTIONS = [
+  { label: "Men's", value: 'mens' },
+  { label: "Women's", value: 'womens' },
 ];
+
+const CATEGORIES = [
+  { label: 'Clothing', value: 'clothing' },
+  { label: 'Outerwear', value: 'outerwear' },
+  { label: 'Basics', value: 'basics' },
+  { label: 'Surf', value: 'surf' },
+];
+
+const SUBCATEGORIES: Record<string, { label: string; value: string }[]> = {
+  clothing: [
+    { label: 'Jackets & Coats', value: 'jackets-coats' },
+    { label: 'Shirts & Tops', value: 'shirts-tops' },
+    { label: 'Pants & Bottoms', value: 'pants-bottoms' },
+  ],
+  outerwear: [
+    { label: 'Rain Jackets', value: 'rain-jackets' },
+    { label: 'Parkas', value: 'parkas' },
+  ],
+  basics: [
+    { label: 'T-Shirts', value: 't-shirts' },
+    { label: 'Hoodies & Sweatshirts', value: 'hoodies-sweatshirts' },
+  ],
+  surf: [
+    { label: 'Boardshorts', value: 'boardshorts' },
+    { label: 'Wetsuits', value: 'wetsuits' },
+  ],
+};
 
 export default function AdminPage() {
   const [loading, setLoading] = useState(false);
@@ -28,7 +52,9 @@ export default function AdminPage() {
     description: '',
     image_url: '',
     affiliate_url: '',
-    category: 'outerwear',
+    section: 'mens',
+    category: 'clothing',
+    subcategory_slug: 'jackets-coats',
     tags: '',
     is_featured: false,
   });
@@ -46,6 +72,18 @@ export default function AdminPage() {
       ...prev,
       title,
       slug: prev.slug === '' || prev.slug === generatedSlug ? generatedSlug : prev.slug,
+    }));
+  };
+
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newCategory = e.target.value;
+    const availableSubcategories = SUBCATEGORIES[newCategory] || [];
+    const firstSubcategory = availableSubcategories[0]?.value || '';
+
+    setFormData((prev) => ({
+      ...prev,
+      category: newCategory,
+      subcategory_slug: firstSubcategory,
     }));
   };
 
@@ -67,7 +105,9 @@ export default function AdminPage() {
       description: formData.description,
       image_url: formData.image_url,
       affiliate_url: formData.affiliate_url,
+      section: formData.section,
       category: formData.category,
+      subcategory_slug: formData.subcategory_slug || null,
       tags: tagsArray,
       is_featured: formData.is_featured,
     };
@@ -89,7 +129,9 @@ export default function AdminPage() {
         description: '',
         image_url: '',
         affiliate_url: '',
-        category: 'outerwear',
+        section: 'mens',
+        category: 'clothing',
+        subcategory_slug: 'jackets-coats',
         tags: '',
         is_featured: false,
       });
@@ -227,14 +269,32 @@ export default function AdminPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1">
+              Section
+            </label>
+            <select
+              value={formData.section}
+              onChange={(e) => setFormData({ ...formData, section: e.target.value })}
+              className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            >
+              <option value="">None</option>
+              {SECTIONS.map((sec) => (
+                <option key={sec.value} value={sec.value}>
+                  {sec.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div>
             <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1">
               Category
             </label>
             <select
               value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              onChange={handleCategoryChange}
               className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
             >
               {CATEGORIES.map((cat) => (
@@ -247,16 +307,34 @@ export default function AdminPage() {
 
           <div>
             <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1">
-              Tags (Comma-Separated)
+              Subcategory
             </label>
-            <input
-              type="text"
-              value={formData.tags}
-              onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-              placeholder="Men's, Outerwear & Rain, Waterproof"
-              className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            />
+            <select
+              value={formData.subcategory_slug}
+              onChange={(e) => setFormData({ ...formData, subcategory_slug: e.target.value })}
+              className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            >
+              <option value="">None</option>
+              {(SUBCATEGORIES[formData.category] || []).map((sub) => (
+                <option key={sub.value} value={sub.value}>
+                  {sub.label}
+                </option>
+              ))}
+            </select>
           </div>
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1">
+            Tags (Comma-Separated)
+          </label>
+          <input
+            type="text"
+            value={formData.tags}
+            onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+            placeholder="Men's, Outerwear & Rain, Waterproof"
+            className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          />
         </div>
 
         <div className="flex items-center gap-2 pt-2">
