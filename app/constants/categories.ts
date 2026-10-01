@@ -21,20 +21,20 @@ export interface Subcategory {
       slug: "mens",
       categories: [
         {
-          name: "Clothing",
-          slug: "clothing",
+          name: "Men's Clothing",
+          slug: "mens-clothing",
           subcategories: [
-            { name: "Jackets & Coats", slug: "jackets-coats" },
-            { name: "Shirts & Tops", slug: "shirts-tops" },
-            { name: "Pants & Shorts", slug: "pants-shorts" },
+            { name: "Men's Jackets & Coats", slug: "mens-jackets-coats" },
+            { name: "Men's Shirts & Tops", slug: "mens-shirts-tops" },
+            { name: "Men's Pants & Shorts", slug: "mens-pants-shorts" },
           ],
         },
         {
-          name: "Accessories",
-          slug: "accessories",
+          name: "Men's Accessories",
+          slug: "mens-accessories",
           subcategories: [
-            { name: "Hats & Caps", slug: "hats" },
-            { name: "Bags & Packs", slug: "bags" },
+            { name: "Men's Hats & Caps", slug: "mens-hats-caps" },
+            { name: "Men's Bags & Packs", slug: "mens-bags-packs" },
           ],
         },
       ],
@@ -44,18 +44,18 @@ export interface Subcategory {
       slug: "womens",
       categories: [
         {
-          name: "Clothing",
-          slug: "clothing",
+          name: "Women's Clothing",
+          slug: "womens-clothing",
           subcategories: [
-            { name: "Jackets & Rainwear", slug: "jackets-rainwear" },
-            { name: "Knitwear & Tops", slug: "knitwear-tops" },
+            { name: "Women's Coats, Jackets & Vests", slug: "womens-coats-jackets-vests" },
+            { name: "Women's Knitwear & Tops", slug: "womens-knitwear-tops" },
           ],
         },
         {
-          name: "Accessories",
-          slug: "accessories",
+          name: "Women's Accessories",
+          slug: "womens-accessories",
           subcategories: [
-            { name: "Bags & Tote", slug: "bags-totes" },
+            { name: "Women's Bags & Tote", slug: "womens-bags-totes" },
           ],
         },
       ],
