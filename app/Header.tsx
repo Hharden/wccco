@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Mountain, Search, ChevronDown, ChevronRight } from "lucide-react";
 import { CATEGORY_TREE, Section, Category } from "./constants/categories";
 
@@ -10,14 +10,19 @@ function HeaderContent() {
   const router = useRouter();
   const [activeSection, setActiveSection] = useState<string | null>(null);
 
+  // Navigates using clean dynamic route paths for SEO
   const handleNavigate = (section: string, category?: string, subcategory?: string) => {
-    const params = new URLSearchParams();
-    if (section && section !== "all") params.set("section", section);
-    if (category) params.set("category", category);
-    if (subcategory) params.set("subcategory", subcategory);
+    if (section === "all") {
+      router.push("/");
+      setActiveSection(null);
+      return;
+    }
 
-    const queryString = params.toString();
-    router.push(queryString ? `/?${queryString}` : "/");
+    let targetPath = `/category/${section}`;
+    if (category) targetPath += `/${category}`;
+    if (subcategory) targetPath += `/${subcategory}`;
+
+    router.push(targetPath);
     setActiveSection(null);
   };
 
@@ -25,7 +30,6 @@ function HeaderContent() {
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-neutral-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-4">
-          {/* Logo */}
           <div className="flex items-center gap-8">
             <Link
               href="/"
@@ -45,7 +49,6 @@ function HeaderContent() {
             </nav>
           </div>
 
-          {/* Search Bar */}
           <div className="hidden sm:flex items-center relative w-64">
             <Search className="w-4 h-4 absolute left-3.5 text-neutral-400 pointer-events-none" />
             <input
@@ -56,7 +59,6 @@ function HeaderContent() {
           </div>
         </div>
 
-        {/* Multilevel Navigation Menu */}
         <div className="flex items-center gap-1 py-2 overflow-x-visible border-t border-neutral-100">
           <button
             onClick={() => handleNavigate("all")}
@@ -80,9 +82,8 @@ function HeaderContent() {
                 {section.categories && <ChevronDown className="w-3 h-3 text-neutral-400" />}
               </button>
 
-              {/* Level 1 Dropdown: Categories */}
               {section.categories && activeSection === section.slug && (
-                <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-neutral-200 rounded-lg shadow-lg py-1 z-50">
+                <div className="absolute top-full left-0 mt-1 w-52 bg-white border border-neutral-200 rounded-lg shadow-lg py-1 z-50">
                   {section.categories.map((cat: Category) => (
                     <div key={cat.slug} className="relative group/sub">
                       <button
@@ -93,9 +94,8 @@ function HeaderContent() {
                         {cat.subcategories && <ChevronRight className="w-3 h-3 text-neutral-400" />}
                       </button>
 
-                      {/* Level 2 Flyout Dropdown: Subcategories */}
                       {cat.subcategories && (
-                        <div className="absolute top-0 left-full ml-0.5 w-48 bg-white border border-neutral-200 rounded-lg shadow-lg py-1 hidden group-hover/sub:block">
+                        <div className="absolute top-0 left-full ml-0.5 w-60 bg-white border border-neutral-200 rounded-lg shadow-lg py-1 hidden group-hover/sub:block">
                           {cat.subcategories.map((sub) => (
                             <button
                               key={sub.slug}
