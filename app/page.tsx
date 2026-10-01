@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import ProductCard from "../components/ProductCard";
+import { CATEGORY_TREE } from "../app/constants/categories";
 
 export const revalidate = 60;
 
@@ -11,22 +12,90 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 const featuredArticle = {
   title: "The Ultimate Pacific Northwest Rainwear Guide",
   slug: "pnw-rainwear-guide",
-  description: "How to stay dry and stylish during coastal drizzle and torrential downpours.",
-  coverImage: "https://images.unsplash.com/photo-1544441893-675973e31985?w=1200&q=80",
+  description:
+    "How to stay dry and stylish during coastal drizzle and torrential downpours.",
+  coverImage:
+    "https://images.unsplash.com/photo-1544441893-675973e31985?w=1200&q=80",
 };
 
+// Helper function to resolve human-readable category name from URL parameters
+function getCategoryTitle(
+  section?: string,
+  category?: string,
+  subcategory?: string
+) {
+  if (subcategory) {
+    for (const sec of CATEGORY_TREE) {
+      for (const cat of sec.categories) {
+        const foundSub = cat.subcategories.find((s) => s.slug === subcategory);
+        if (foundSub) return foundSub.name;
+      }
+    }
+  }
+
+  if (category) {
+    for (const sec of CATEGORY_TREE) {
+      const foundCat = sec.categories.find((c) => c.slug === category);
+      if (foundCat) return foundCat.name;
+    }
+  }
+
+  if (section) {
+    const foundSec = CATEGORY_TREE.find((s) => s.slug === section);
+    if (foundSec) return foundSec.name;
+  }
+
+  return "Curated Coastal Gear & Wear";
+}
+
+// 1. Next.js 15 Dynamic Metadata Generator (SEO Tab Titles)
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    section?: string;
+    category?: string;
+    subcategory?: string;
+  }>;
+}) {
+  const resolvedParams = await searchParams;
+  const pageTitle = getCategoryTitle(
+    resolvedParams.section,
+    resolvedParams.category,
+    resolvedParams.subcategory
+  );
+
+  return {
+    title: `${pageTitle} | West Coast Clothing Co.`,
+    description: `Explore our handpicked collection of ${pageTitle.toLowerCase()} built for coastal living.`,
+  };
+}
+
+// 2. Main Page Component
 export default async function Home({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string }>;
+  searchParams: Promise<{
+    section?: string;
+    category?: string;
+    subcategory?: string;
+  }>;
 }) {
   const resolvedParams = await searchParams;
-  const category = resolvedParams?.category;
+  const { section, category, subcategory } = resolvedParams;
 
+  // Resolve active header title from category tree
+  const currentTitle = getCategoryTitle(section, category, subcategory);
+
+  // Build Supabase Query based on active query params
   let query = supabase.from("products").select("*");
 
-  if (category && category !== "all") {
-    query = query.contains("tags", [category]);
+  if (subcategory) {
+    query = query.eq("subcategory", subcategory);
+  } else if (category && category !== "all") {
+    query = query.or(`category.eq.${category},tags.cs.{${category}}`);
+  } else if (section) {
+    query = query.eq("section", section);
   }
 
   const { data: products } = await query;
@@ -36,10 +105,11 @@ export default async function Home({
       {/* Header Banner */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-neutral-900">
-          Curated Coastal Gear & Wear
+          {currentTitle}
         </h1>
         <p className="text-sm text-neutral-500 mt-1">
-          Handpicked minimalist apparel and outdoor essentials built for the West Coast interface.
+          Handpicked minimalist apparel and outdoor essentials built for the West
+          Coast interface.
         </p>
       </div>
 
@@ -65,7 +135,7 @@ export default async function Home({
               href={`/articles/${featuredArticle.slug}`}
               className="mt-4 inline-flex items-center text-sm font-semibold text-white hover:underline"
             >
-              Read Guide →
+              Read Guide &rarr;
             </Link>
           </div>
         </div>
@@ -74,7 +144,9 @@ export default async function Home({
       {/* Product Grid */}
       {!products || products.length === 0 ? (
         <div className="text-center py-20 bg-white border border-neutral-200 rounded-2xl">
-          <p className="text-neutral-500 text-sm">No products found in this category.</p>
+          <p className="text-neutral-500 text-sm">
+            No products found in this category.
+          </p>
           <Link
             href="/"
             className="inline-block mt-4 text-xs font-semibold text-emerald-800 hover:underline"
