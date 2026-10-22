@@ -49,6 +49,7 @@ export interface Subcategory {
           subcategories: [
             { name: "Women's Coats, Jackets & Vests", slug: "womens-coats-jackets-vests" },
             { name: "Women's Knitwear & Tops", slug: "womens-knitwear-tops" },
+            { name: "Women's Tops, Tees & Blouses", slug: "womens-tops-tees-blouses" },
           ],
         },
         {
