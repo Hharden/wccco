@@ -37,6 +37,13 @@ export interface Subcategory {
             { name: "Men's Bags & Packs", slug: "mens-bags-packs" },
           ],
         },
+        {
+          name: "Men's Shoes",
+          slug: "mens-shoes",
+          subcategories: [
+            { name: "Men's Boots", slug: "mens-boots" },
+          ],
+        },
       ],
     },
     {
