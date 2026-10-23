@@ -9,14 +9,24 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-const featuredArticle = {
-  title: "The Ultimate Pacific Northwest Rainwear Guide",
-  slug: "pnw-rainwear-guide",
-  description:
-    "How to stay dry and stylish during coastal drizzle and torrential downpours.",
-  coverImage:
-    "https://images.unsplash.com/photo-1544441893-675973e31985?w=1200&q=80",
-};
+const featuredArticles = [
+  {
+    title: "The Ultimate Men's Rainwear Guide",
+    slug: "mens-rainwear-guide",
+    description:
+      "How to stay dry and stylish during coastal drizzle and torrential downpours.",
+    coverImage:
+      "https://ioepraoxqtygfmqcvdrv.supabase.co/storage/v1/object/public/marketing-images/2-men-hiking-in-rain-mountain.jpg",
+  },
+  {
+    title: "Essential Layering for Coastal Climates",
+    slug: "womens-rainwear-guide", // Update with your actual second article slug
+    description:
+      "Master the art of temperature regulation with breathable, minimalist layers.",
+    coverImage:
+      "https://ioepraoxqtygfmqcvdrv.supabase.co/storage/v1/object/public/marketing-images/3-women-hiking-boot-splash.jpg", // Update with your actual image
+  },
+];
 
 // Helper function to resolve human-readable category name from URL parameters
 function getCategoryTitle(
@@ -45,7 +55,7 @@ function getCategoryTitle(
     if (foundSec) return foundSec.name;
   }
 
-  return "Curated Coastal Gear & Wear";
+  return "Hand-Picked & Featured Coastal Gear & Wear";
 }
 
 // 1. Next.js 15 Dynamic Metadata Generator (SEO Tab Titles)
@@ -87,7 +97,7 @@ export default async function Home({
   // Resolve active header title from category tree
   const currentTitle = getCategoryTitle(section, category, subcategory);
 
-  // Build Supabase Query based on active query params
+  // Build Supabase Query based on active query params, sorted by newest first
   let query = supabase.from("products").select("*");
 
   if (subcategory) {
@@ -97,6 +107,9 @@ export default async function Home({
   } else if (section) {
     query = query.eq("section", section);
   }
+
+  // Sort by newest added at the top
+  query = query.order("created_at", { ascending: false });
 
   const { data: products } = await query;
 
@@ -113,31 +126,38 @@ export default async function Home({
         </p>
       </div>
 
-      {/* Featured Article Hero Section */}
+      {/* Featured Articles Hero Section (2-Column Grid) */}
       <section className="mb-12">
-        <div className="relative rounded-2xl overflow-hidden bg-neutral-900 text-white group">
-          <img
-            src={featuredArticle.coverImage}
-            alt={featuredArticle.title}
-            className="w-full h-80 object-cover opacity-60 group-hover:scale-105 transition duration-500"
-          />
-          <div className="absolute inset-0 p-8 flex flex-col justify-end bg-gradient-to-t from-black/80 via-black/20 to-transparent">
-            <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">
-              Featured Article
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-bold mt-1">
-              {featuredArticle.title}
-            </h2>
-            <p className="text-sm text-neutral-300 mt-2 max-w-2xl">
-              {featuredArticle.description}
-            </p>
-            <Link
-              href={`/articles/${featuredArticle.slug}`}
-              className="mt-4 inline-flex items-center text-sm font-semibold text-white hover:underline"
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {featuredArticles.map((article) => (
+            <div
+              key={article.slug}
+              className="relative rounded-2xl overflow-hidden bg-neutral-900 text-white group h-80 flex flex-col justify-end"
             >
-              Read Guide &rarr;
-            </Link>
-          </div>
+              <img
+                src={article.coverImage}
+                alt={article.title}
+                className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition duration-500"
+              />
+              <div className="absolute inset-0 p-6 sm:p-8 flex flex-col justify-end bg-gradient-to-t from-black/80 via-black/30 to-transparent">
+                <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">
+                  Featured Article
+                </span>
+                <h2 className="text-xl sm:text-2xl font-bold mt-1">
+                  {article.title}
+                </h2>
+                <p className="text-xs sm:text-sm text-neutral-300 mt-2 line-clamp-2">
+                  {article.description}
+                </p>
+                <Link
+                  href={`/articles/${article.slug}`}
+                  className="mt-3 inline-flex items-center text-sm font-semibold text-white hover:underline"
+                >
+                  Read Guide &rarr;
+                </Link>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 

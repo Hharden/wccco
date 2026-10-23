@@ -29,25 +29,15 @@ function HeaderContent() {
   return (
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-neutral-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Top Header Row (Logo & Search) */}
         <div className="flex items-center justify-between h-16 gap-4">
-          <div className="flex items-center gap-8">
-            <Link
-              href="/"
-              className="flex items-center gap-2 font-bold text-lg text-neutral-900 tracking-tight hover:opacity-90 transition"
-            >
-              <Mountain className="w-5 h-5 text-emerald-800" />
-              <span>West Coast Clothing Co.</span>
-            </Link>
-
-            <nav className="hidden md:flex items-center gap-6">
-              <Link
-                href="/articles"
-                className="text-xs font-semibold text-neutral-600 hover:text-neutral-900 transition"
-              >
-                Articles & Guides
-              </Link>
-            </nav>
-          </div>
+          <Link
+            href="/"
+            className="flex items-center gap-2 font-bold text-lg text-neutral-900 tracking-tight hover:opacity-90 transition"
+          >
+            <Mountain className="w-5 h-5 text-emerald-800" />
+            <span>West Coast Clothing Co.</span>
+          </Link>
 
           <div className="hidden sm:flex items-center relative w-64">
             <Search className="w-4 h-4 absolute left-3.5 text-neutral-400 pointer-events-none" />
@@ -59,10 +49,11 @@ function HeaderContent() {
           </div>
         </div>
 
+        {/* Navigation Bar Row (Categories + Articles & Guides) */}
         <div className="flex items-center gap-1 py-2 overflow-x-visible border-t border-neutral-100">
           <button
             onClick={() => handleNavigate("all")}
-            className="px-3 py-1.5 rounded-md text-xs font-medium text-neutral-700 hover:bg-neutral-100 transition"
+            className="px-3 py-1.5 rounded-md text-xs font-medium text-neutral-700 hover:bg-neutral-100 transition whitespace-nowrap"
           >
             All Products
           </button>
@@ -76,7 +67,7 @@ function HeaderContent() {
             >
               <button
                 onClick={() => handleNavigate(section.slug)}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium text-neutral-700 hover:bg-neutral-100 transition"
+                className="flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium text-neutral-700 hover:bg-neutral-100 transition whitespace-nowrap"
               >
                 {section.name}
                 {section.categories && <ChevronDown className="w-3 h-3 text-neutral-400" />}
@@ -113,6 +104,14 @@ function HeaderContent() {
               )}
             </div>
           ))}
+
+          {/* Articles & Guides placed on the same line */}
+          <Link
+            href="/articles"
+            className="px-3 py-1.5 rounded-md text-xs font-medium text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900 transition whitespace-nowrap"
+          >
+            Articles & Guides
+          </Link>
         </div>
       </div>
     </header>
