@@ -60,6 +60,13 @@ export interface Subcategory {
           ],
         },
         {
+          name: "Women's Shoes",
+          slug: "womens-shoes",
+          subcategories: [
+            { name: "Women's Boots", slug: "womens-boots" },
+          ],
+        },
+        {
           name: "Women's Accessories",
           slug: "womens-accessories",
           subcategories: [
