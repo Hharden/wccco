@@ -11,7 +11,7 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 const featuredArticles = [
   {
-    title: "The Ultimate Men's Rainwear Guide",
+    title: "The Ultimate Men's Rainwear Guide 2026",
     slug: "mens-rainwear-guide",
     description:
       "How to stay dry and stylish during coastal drizzle and torrential downpours.",
@@ -19,7 +19,7 @@ const featuredArticles = [
       "https://ioepraoxqtygfmqcvdrv.supabase.co/storage/v1/object/public/marketing-images/2-men-hiking-in-rain-mountain.jpg",
   },
   {
-    title: "Essential Layering for Coastal Climates",
+    title: "The Ultimate Women's Rainwear Guide 2026",
     slug: "womens-rainwear-guide", // Update with your actual second article slug
     description:
       "Master the art of temperature regulation with breathable, minimalist layers.",
@@ -121,8 +121,7 @@ export default async function Home({
           {currentTitle}
         </h1>
         <p className="text-sm text-neutral-500 mt-1">
-          Handpicked minimalist apparel and outdoor essentials built for the West
-          Coast interface.
+          Handpicked apparel and outdoor essentials.
         </p>
       </div>
 
