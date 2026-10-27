@@ -119,7 +119,7 @@ export default async function ProductDetailPage({
             </>
           )}
           <span>&nbsp;&gt;&nbsp;</span>
-          <span className="text-neutral-800 font-medium truncate max-w-[300px]">
+          <span className="text-neutral-800 font-medium truncate max-w-[400px]">
             {product.title}
           </span>
         </nav>
