@@ -55,13 +55,31 @@ export default async function ProductDetailPage({
     notFound();
   }
 
-  // 2. Fetch up to 8 related products (2 rows of 4) in the same category
-  const { data: relatedProducts } = await supabase
+  // 2. Fetch related products: prioritize the exact same subcategory, 
+  // falling back or filling up to 8 items from the same main category.
+  let { data: relatedProducts } = await supabase
     .from("products")
     .select("*")
     .eq("category", product.category)
+    .eq("subcategory_slug", product.subcategory_slug)
     .neq("slug", resolvedParams.slug)
     .limit(8);
+
+  // If we don't have enough items in that exact subcategory, grab more from the main category
+  if (!relatedProducts || relatedProducts.length < 8) {
+    const existingIds = [product.id, ...(relatedProducts?.map((p) => p.id) || [])];
+    const needed = 8 - (relatedProducts?.length || 0);
+
+    const { data: fallbackProducts } = await supabase
+      .from("products")
+      .select("*")
+      .eq("category", product.category)
+      .neq("slug", resolvedParams.slug)
+      .not("id", "in", `(${existingIds.join(",")})`)
+      .limit(needed);
+
+    relatedProducts = [...(relatedProducts || []), ...(fallbackProducts || [])];
+  }
 
   const retailerName = product.retailer || product.brand || "Retailer";
 
