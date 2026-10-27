@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { CATEGORY_TREE } from '../constants/categories';
@@ -9,59 +9,54 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+const SECTIONS = [
+  { label: "Men's", value: 'mens' },
+  { label: "Women's", value: 'womens' },
+];
+
+const CATEGORIES = [
+  { label: 'Clothing', value: 'clothing' },
+  { label: 'Outerwear', value: 'outerwear' },
+  { label: 'Basics', value: 'basics' },
+  { label: 'Surf', value: 'surf' },
+];
+
+// Dynamically generate SUBCATEGORIES lookup map from CATEGORY_TREE
+const SUBCATEGORIES: Record<string, { label: string; value: string }[]> = {};
+
+CATEGORY_TREE.forEach((section) => {
+  section.categories?.forEach((cat) => {
+    if (!SUBCATEGORIES[cat.slug]) {
+      SUBCATEGORIES[cat.slug] = [];
+    }
+    cat.subcategories?.forEach((sub) => {
+      // Avoid duplicate subcategories if shared across sections
+      if (!SUBCATEGORIES[cat.slug].some((s) => s.value === sub.slug)) {
+        SUBCATEGORIES[cat.slug].push({ label: sub.name, value: sub.slug });
+      }
+    });
+  });
+});
+
 export default function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-
-  // 1. Dynamically derive Sections from CATEGORY_TREE
-  const SECTIONS = useMemo(() => {
-    return CATEGORY_TREE.map((sec) => ({
-      label: sec.name,
-      value: sec.slug,
-    }));
-  }, []);
-
-  // Set default initial state based on the first section in CATEGORY_TREE
-  const initialSection = SECTIONS[0]?.value || '';
-  const initialSectionData = CATEGORY_TREE.find((s) => s.slug === initialSection);
-  const initialCategories = initialSectionData?.categories || [];
-  const initialCategory = initialCategories[0]?.slug || '';
-  const initialCategoryData = initialCategories.find((c) => c.slug === initialCategory);
-  const initialSubcategory = initialCategoryData?.subcategories?.[0]?.slug || '';
 
   const [formData, setFormData] = useState({
     title: '',
     slug: '',
     brand: '',
+    color: '',
     merchant_id: '',
     description: '',
     image_url: '',
     affiliate_url: '',
-    section: initialSection,
-    category: initialCategory,
-    subcategory_slug: initialSubcategory,
+    section: 'mens',
+    category: 'clothing',
+    subcategory_slug: 'jackets-coats',
     tags: '',
     is_featured: false,
   });
-
-  // 2. Dynamically derive available Categories based on currently selected Section
-  const availableCategories = useMemo(() => {
-    const currentSection = CATEGORY_TREE.find((s) => s.slug === formData.section);
-    return (currentSection?.categories || []).map((cat) => ({
-      label: cat.name,
-      value: cat.slug,
-    }));
-  }, [formData.section]);
-
-  // 3. Dynamically derive available Subcategories based on selected Section and Category
-  const availableSubcategories = useMemo(() => {
-    const currentSection = CATEGORY_TREE.find((s) => s.slug === formData.section);
-    const currentCat = currentSection?.categories?.find((c) => c.slug === formData.category);
-    return (currentCat?.subcategories || []).map((sub) => ({
-      label: sub.name,
-      value: sub.slug,
-    }));
-  }, [formData.section, formData.category]);
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const title = e.target.value;
@@ -79,33 +74,15 @@ export default function AdminPage() {
     }));
   };
 
-  // When Section changes, reset Category and Subcategory to the first available options
-  const handleSectionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newSectionSlug = e.target.value;
-    const newSectionData = CATEGORY_TREE.find((s) => s.slug === newSectionSlug);
-    const firstCategory = newSectionData?.categories?.[0];
-    const firstCategorySlug = firstCategory?.slug || '';
-    const firstSubcategorySlug = firstCategory?.subcategories?.[0]?.slug || '';
-
-    setFormData((prev) => ({
-      ...prev,
-      section: newSectionSlug,
-      category: firstCategorySlug,
-      subcategory_slug: firstSubcategorySlug,
-    }));
-  };
-
-  // When Category changes, reset Subcategory to the first available option
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newCategorySlug = e.target.value;
-    const currentSectionData = CATEGORY_TREE.find((s) => s.slug === formData.section);
-    const newCategoryData = currentSectionData?.categories?.find((c) => c.slug === newCategorySlug);
-    const firstSubcategorySlug = newCategoryData?.subcategories?.[0]?.slug || '';
+    const newCategory = e.target.value;
+    const availableSubcategories = SUBCATEGORIES[newCategory] || [];
+    const firstSubcategory = availableSubcategories[0]?.value || '';
 
     setFormData((prev) => ({
       ...prev,
-      category: newCategorySlug,
-      subcategory_slug: firstSubcategorySlug,
+      category: newCategory,
+      subcategory_slug: firstSubcategory,
     }));
   };
 
@@ -122,7 +99,8 @@ export default function AdminPage() {
     const productPayload = {
       title: formData.title,
       slug: formData.slug || formData.title.toLowerCase().replace(/ /g, '-'),
-      brand: formData.brand,
+      brand: formData.brand.trim() || null, // Saves as null if left blank
+      color: formData.color.trim() || null, // Saves as null if left blank
       merchant_id: formData.merchant_id || 'amazon',
       description: formData.description,
       image_url: formData.image_url,
@@ -147,13 +125,14 @@ export default function AdminPage() {
         title: '',
         slug: '',
         brand: '',
+        color: '',
         merchant_id: '',
         description: '',
         image_url: '',
         affiliate_url: '',
-        section: initialSection,
-        category: initialCategory,
-        subcategory_slug: initialSubcategory,
+        section: 'mens',
+        category: 'clothing',
+        subcategory_slug: 'jackets-coats',
         tags: '',
         is_featured: false,
       });
@@ -207,11 +186,10 @@ export default function AdminPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1">
-              Brand Name *
+              Brand Name <span className="text-neutral-400 font-normal">(Optional)</span>
             </label>
             <input
               type="text"
-              required
               value={formData.brand}
               onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
               placeholder="e.g. Patagonia, Columbia, Levi's"
@@ -221,16 +199,29 @@ export default function AdminPage() {
 
           <div>
             <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1">
-              Retailer / Merchant Name
+              Color <span className="text-neutral-400 font-normal">(Optional)</span>
             </label>
             <input
               type="text"
-              value={formData.merchant_id}
-              onChange={(e) => setFormData({ ...formData, merchant_id: e.target.value })}
-              placeholder="e.g. Amazon, Huckberry, REI (Defaults to Amazon)"
+              value={formData.color}
+              onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+              placeholder="e.g. Olive, Navy, Charcoal"
               className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold uppercase text-neutral-700 mb-1">
+            Retailer / Merchant Name
+          </label>
+          <input
+            type="text"
+            value={formData.merchant_id}
+            onChange={(e) => setFormData({ ...formData, merchant_id: e.target.value })}
+            placeholder="e.g. Amazon, Huckberry, REI (Defaults to Amazon)"
+            className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          />
         </div>
 
         <div>
@@ -298,7 +289,7 @@ export default function AdminPage() {
             </label>
             <select
               value={formData.section}
-              onChange={handleSectionChange}
+              onChange={(e) => setFormData({ ...formData, section: e.target.value })}
               className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
             >
               <option value="">None</option>
@@ -319,8 +310,7 @@ export default function AdminPage() {
               onChange={handleCategoryChange}
               className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
             >
-              <option value="">None</option>
-              {availableCategories.map((cat) => (
+              {CATEGORIES.map((cat) => (
                 <option key={cat.value} value={cat.value}>
                   {cat.label}
                 </option>
@@ -338,7 +328,7 @@ export default function AdminPage() {
               className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
             >
               <option value="">None</option>
-              {availableSubcategories.map((sub) => (
+              {(SUBCATEGORIES[formData.category] || []).map((sub) => (
                 <option key={sub.value} value={sub.value}>
                   {sub.label}
                 </option>
