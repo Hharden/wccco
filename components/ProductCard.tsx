@@ -24,7 +24,7 @@ export default function ProductCard({ product }: { product: Product }) {
           <img
             src={product.image_url}
             alt={product.title}
-            className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-300"
+            className="w-full h-full object-contain object-center group-hover:scale-105 transition duration-300"
           />
           {product.brand && (
             <span className="absolute top-3 left-3 bg-black/60 backdrop-blur-md text-white text-xs font-medium px-2.5 py-1 rounded-full">
