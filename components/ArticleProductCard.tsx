@@ -21,7 +21,7 @@ export default async function ArticleProductCard({ slug }: ArticleProductCardPro
   }
 
   return (
-    <div className="not-prose my-6 max-w-sm mx-auto sm:max-w-none">
+    <div className="not-prose w-full h-full">
       <ProductCard product={product} />
     </div>
   );
