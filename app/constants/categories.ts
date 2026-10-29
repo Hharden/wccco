@@ -73,6 +73,7 @@ export interface Subcategory {
           slug: "womens-accessories",
           subcategories: [
             { name: "Women's Bags & Tote", slug: "womens-bags-totes" },
+            { name: "Women's Hats", slug: "womens-hats" },
           ],
         },
       ],
