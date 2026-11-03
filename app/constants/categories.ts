@@ -26,6 +26,7 @@ export interface Subcategory {
           subcategories: [
             { name: "Men's Jackets & Coats", slug: "mens-jackets-coats" },
             { name: "Men's Shirts & Tops", slug: "mens-shirts-tops" },
+            { name: "Men's Sweatshirts & Hoodies", slug: "mens-sweatshirts-hoodies" },
             { name: "Men's Pants & Shorts", slug: "mens-pants-shorts" },
           ],
         },
