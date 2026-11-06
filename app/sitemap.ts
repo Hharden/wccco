@@ -4,7 +4,7 @@ import path from "path";
 
 // Helper to fetch all articles so the sitemap updates automatically when you add new MDX files
 async function getAllArticles() {
-  const articlesDirectory = path.join(process.cwd(), "app", "content", "articles");
+  const articlesDirectory = path.join(process.cwd(), "content", "articles");
   
   if (!fs.existsSync(articlesDirectory)) {
     return [];
