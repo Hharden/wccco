@@ -91,9 +91,6 @@ export async function generateMetadata({
   return {
     title: `${pageTitle} | West Coast Clothing Co.`,
     description: `Explore our handpicked collection of ${pageTitle.toLowerCase()} built for coastal living.`,
-    other: {
-      "impact-site-verification": "aa365c82-a8cc-4119-8bd5-a233bb92b85b",
-    }
   };
 }
 

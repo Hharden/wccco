@@ -4,6 +4,9 @@ import Header from './Header'
 export const metadata = {
   title: 'West Coast Clothing Co.',
   description: 'Minimalist coastal apparel and accessories.',
+  other: {
+    "impact-site-verification": "aa365c82-a8cc-4119-8bd5-a233bb92b85b",
+  },
 }
 
 export default function RootLayout({
