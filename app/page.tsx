@@ -91,6 +91,9 @@ export async function generateMetadata({
   return {
     title: `${pageTitle} | West Coast Clothing Co.`,
     description: `Explore our handpicked collection of ${pageTitle.toLowerCase()} built for coastal living.`,
+    other: {
+      "impact-site-verification": "aa365c82-a8cc-4119-8bd5-a233bb92b85b",
+    }
   };
 }
 
@@ -329,6 +332,7 @@ const bottomSectionProducts = randomSubProducts || [];
         <div className="flex items-center justify-between tracking-tight mb-4">
           <div>
             <h2 className="text-2xl font-bold text-neutral-900">{randomSubTitle}</h2>
+            
             <p className="text-xs text-neutral-500">Handpicked selections from our catalog.</p>
           </div>
           <Link href={randomSubUrl} className="text-xs font-semibold text-emerald-800 hover:underline">
