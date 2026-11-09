@@ -56,7 +56,6 @@ export interface Subcategory {
           slug: "womens-clothing",
           subcategories: [
             { name: "Women's Coats, Jackets & Vests", slug: "womens-coats-jackets-vests" },
-            { name: "Women's Knitwear & Tops", slug: "womens-knitwear-tops" },
             { name: "Women's Pants", slug: "womens-pants" },
             { name: "Women's Shorts", slug: "womens-shorts" },
             { name: "Women's Socks", slug: "womens-socks" },
