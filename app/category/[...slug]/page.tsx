@@ -114,6 +114,8 @@ export default async function CategoryPage({
       primaryQuery = primaryQuery.eq("section", details.slug);
     }
 
+    primaryQuery = primaryQuery.order("created_at", { ascending: false });
+
     const { data } = await primaryQuery;
     products = data;
   }
@@ -131,6 +133,8 @@ export default async function CategoryPage({
     } else if (rawSection) {
       fallbackQuery = fallbackQuery.eq("section", rawSection);
     }
+
+    fallbackQuery = fallbackQuery.order("created_at", { ascending: false });
 
     const { data: fallbackData } = await fallbackQuery;
     products = fallbackData;
