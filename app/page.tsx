@@ -68,7 +68,7 @@ function getCategoryTitle(
     if (foundSec) return foundSec.name;
   }
 
-  return "Curated Coastal Gear & Wear";
+  return "Shop Men's & Womens Clothing, Shoes & Accessories";
 }
 
 // 1. Next.js 15 Dynamic Metadata Generator (SEO Tab Titles)
@@ -113,7 +113,7 @@ export default async function Home({
   // If user is browsing with filters, respect the filter query
   let query = supabase.from("products").select("*");
   if (subcategory) {
-    query = query.eq("subcategory", subcategory);
+    query = query.or(`subcategory.eq.${subcategory},subcategory_slug.eq.${subcategory},"subcategory.slug".eq.${subcategory}`);
   } else if (category && category !== "all") {
     query = query.or(`category.eq.${category},tags.cs.{${category}}`);
   } else if (section) {
@@ -126,63 +126,66 @@ export default async function Home({
   const heroGuides = allGuides.slice(0, 2);
   const secondaryGuides = allGuides.slice(2, 4);
 
-  // 1. Fetch separate targeted pools so sections never overlap completely
-  const { data: allProductsPool } = await supabase.from("products").select("*");
+  // 1. Fetch master product pool sorted strictly by newest added first
+  const { data: allProductsPool } = await supabase
+    .from("products")
+    .select("*")
+    .order("created_at", { ascending: false });
+
   const masterPool = allProductsPool || [];
 
-  // Shuffle pool to pick random items safely for Featured Picks
+  // Shuffle master pool to pick random items safely for Featured Picks
   const shuffledMaster = [...masterPool].sort(() => 0.5 - Math.random());
   const featuredPicksProducts = shuffledMaster.slice(0, 8);
-  const usedProductIds = new Set(featuredPicksProducts.map((p) => p.id));
 
-  // 2. Men's Section
-  const mensPool = masterPool.filter((p) => p.section === "mens" && !usedProductIds.has(p.id));
-  const mensProducts = (mensPool.length >= 8 ? mensPool : masterPool.filter((p) => p.section === "mens")).slice(0, 8);
-  mensProducts.forEach((p) => usedProductIds.add(p.id));
+  // 2. Latest Men's Section (top 8 newest men's items in the database)
+  const mensProducts = masterPool
+    .filter((p) => p.section === "mens")
+    .slice(0, 8);
 
-  // 3. Women's Section
-  const womensPool = masterPool.filter((p) => p.section === "womens" && !usedProductIds.has(p.id));
-  const womensProducts = (womensPool.length >= 8 ? womensPool : masterPool.filter((p) => p.section === "womens")).slice(0, 8);
-  womensProducts.forEach((p) => usedProductIds.add(p.id));
-// 4. Random Subcategory Section mapped using exact CATEGORY_TREE hierarchy
-const subcategoryList: {
-  sectionSlug: string;
-  categorySlug: string;
-  subSlug: string;
-  name: string;
-  fullUrl: string;
-}[] = [];
+  // 3. Latest Women's Section (top 8 newest women's items in the database)
+  const womensProducts = masterPool
+    .filter((p) => p.section === "womens")
+    .slice(0, 8);
 
-CATEGORY_TREE.forEach((sec) => {
-  sec.categories.forEach((cat) => {
-    cat.subcategories.forEach((sub) => {
-      subcategoryList.push({
-        sectionSlug: sec.slug,
-        categorySlug: cat.slug,
-        subSlug: sub.slug,
-        name: sub.name,
-        fullUrl: `/category/${sec.slug}/${cat.slug}/${sub.slug}`,
+  // 4. Random Subcategory Section mapped using exact CATEGORY_TREE hierarchy
+  const subcategoryList: {
+    sectionSlug: string;
+    categorySlug: string;
+    subSlug: string;
+    name: string;
+    fullUrl: string;
+  }[] = [];
+
+  CATEGORY_TREE.forEach((sec) => {
+    sec.categories.forEach((cat) => {
+      cat.subcategories.forEach((sub) => {
+        subcategoryList.push({
+          sectionSlug: sec.slug,
+          categorySlug: cat.slug,
+          subSlug: sub.slug,
+          name: sub.name,
+          fullUrl: `/category/${sec.slug}/${cat.slug}/${sub.slug}`,
+        });
       });
     });
   });
-});
 
-const randomSubObj = subcategoryList.length > 0 
-  ? subcategoryList[Math.floor(Math.random() * subcategoryList.length)]
-  : { sectionSlug: "mens", categorySlug: "mens-clothing", subSlug: "mens-sweatshirts-hoodies", name: "Sweatshirts & Hoodies", fullUrl: "/category/mens/mens-clothing/mens-sweatshirts-hoodies" };
+  const randomSubObj = subcategoryList.length > 0 
+    ? subcategoryList[Math.floor(Math.random() * subcategoryList.length)]
+    : { sectionSlug: "mens", categorySlug: "mens-clothing", subSlug: "mens-sweatshirts-hoodies", name: "Sweatshirts & Hoodies", fullUrl: "/category/mens/mens-clothing/mens-sweatshirts-hoodies" };
 
-const randomSubTitle = randomSubObj.name;
-const randomSubUrl = randomSubObj.fullUrl;
-const randomSubSlug = randomSubObj.subSlug;
+  const randomSubTitle = randomSubObj.name;
+  const randomSubUrl = randomSubObj.fullUrl;
+  const randomSubSlug = randomSubObj.subSlug;
 
-// Query Supabase matching subcategory_slug exactly like your dynamic route
-const { data: randomSubProducts } = await supabase
-  .from("products")
-  .select("*")
-  .eq("subcategory_slug", randomSubSlug)
-  .limit(8);
-
-const bottomSectionProducts = randomSubProducts || [];
+  // Precisely filter masterPool in memory to guarantee 100% matching products for the random subcategory
+  const bottomSectionProducts = masterPool
+    .filter((p) => {
+      const subValue = p["subcategory.slug"] || p.subcategory_slug || p.subcategory;
+      return subValue === randomSubSlug;
+    })
+    .slice(0, 8);
 
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-16">
@@ -193,12 +196,11 @@ const bottomSectionProducts = randomSubProducts || [];
           {currentTitle}
         </h1>
         <p className="text-sm text-neutral-500 mt-1">
-          Handpicked minimalist apparel and outdoor essentials built for the West
-          Coast interface.
+          Handpicked west-coast inspired style clothing and outdoor essentials.
         </p>
       </div>
 
-      {/* 1. Hero Guides (2 Dynamic Featured Guide Cards) */}
+      {/* 1. Hero Guides */}
       {heroGuides.length > 0 && (
         <section>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -237,55 +239,55 @@ const bottomSectionProducts = randomSubProducts || [];
         </section>
       )}
 
-      {/* 2. Featured Picks (Horizontal Slider / Carousel - Random Products, No View All) */}
+      {/* 2. Featured Picks */}
       <section>
         <div className="mb-4">
           <h2 className="text-2xl font-bold text-neutral-900">Featured Picks</h2>
           <p className="text-xs text-neutral-500">Handpicked essentials for the season.</p>
         </div>
-        <div className="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4 scrollbar-none">
+        <div className="flex gap-4 sm:gap-6 overflow-x-auto snap-x snap-mandatory pb-4 scrollbar-none">
           {featuredPicksProducts.map((product) => (
-            <div key={product.id} className="w-72 sm:w-80 flex-shrink-0 snap-start">
+            <div key={product.id} className="w-60 sm:w-68 md:w-72 flex-shrink-0 snap-start">
               <ProductCard product={product} />
             </div>
           ))}
         </div>
       </section>
 
-      {/* 3. Category Section 1: Featured Men's (Horizontal Slider) */}
+      {/* 3. Category Section 1: Latest Men's */}
       <section>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-2xl font-bold text-neutral-900">Featured Men's</h2>
-            <p className="text-xs text-neutral-500">Built for rugged coastal exploration.</p>
+            <h2 className="text-2xl font-bold text-neutral-900">Latest Men's</h2>
+            <p className="text-xs text-neutral-500">Newly added gear built for rugged coastal exploration.</p>
           </div>
           <Link href="/category/mens" className="text-xs font-semibold text-emerald-800 hover:underline">
             Shop All Men's &rarr;
           </Link>
         </div>
-        <div className="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4 scrollbar-none">
+        <div className="flex gap-4 sm:gap-6 overflow-x-auto snap-x snap-mandatory pb-4 scrollbar-none">
           {mensProducts.map((product) => (
-            <div key={product.id} className="w-72 sm:w-80 flex-shrink-0 snap-start">
+            <div key={product.id} className="w-60 sm:w-68 md:w-72 flex-shrink-0 snap-start">
               <ProductCard product={product} />
             </div>
           ))}
         </div>
       </section>
 
-      {/* 4. Category Section 2: Featured Women's (Horizontal Slider) */}
+      {/* 4. Category Section 2: Latest Women's */}
       <section>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-2xl font-bold text-neutral-900">Featured Women's</h2>
-            <p className="text-xs text-neutral-500">Minimalist style meets technical performance.</p>
+            <h2 className="text-2xl font-bold text-neutral-900">Latest Women's</h2>
+            <p className="text-xs text-neutral-500">Newly added minimalist style meets technical performance.</p>
           </div>
           <Link href="/category/womens" className="text-xs font-semibold text-emerald-800 hover:underline">
             Shop All Women's &rarr;
           </Link>
         </div>
-        <div className="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4 scrollbar-none">
+        <div className="flex gap-4 sm:gap-6 overflow-x-auto snap-x snap-mandatory pb-4 scrollbar-none">
           {womensProducts.map((product) => (
-            <div key={product.id} className="w-72 sm:w-80 flex-shrink-0 snap-start">
+            <div key={product.id} className="w-60 sm:w-68 md:w-72 flex-shrink-0 snap-start">
               <ProductCard product={product} />
             </div>
           ))}
@@ -324,13 +326,12 @@ const bottomSectionProducts = randomSubProducts || [];
         </section>
       )}
 
-      {/* 6. Bottom Random Subcategory Section (Grid Format with masterPool fallback) */}
+      {/* 6. Bottom Random Subcategory Section */}
       <section>
         <div className="flex items-center justify-between tracking-tight mb-4">
           <div>
             <h2 className="text-2xl font-bold text-neutral-900">{randomSubTitle}</h2>
-            
-            <p className="text-xs text-neutral-500">Handpicked selections from our catalog.</p>
+            <p className="text-xs text-neutral-500">Handpicked recent selections from our catalog.</p>
           </div>
           <Link href={randomSubUrl} className="text-xs font-semibold text-emerald-800 hover:underline">
             View Collection &rarr;
@@ -346,6 +347,9 @@ const bottomSectionProducts = randomSubProducts || [];
           <p className="text-xs text-neutral-500">No products available in this subcategory right now.</p>
         )}
       </section>
+
+
+      
 
     </main>
   );
