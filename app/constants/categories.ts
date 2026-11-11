@@ -79,4 +79,9 @@ export interface Subcategory {
         },
       ],
     },
+    {
+      name: "Luggage & Travel Gear",
+      slug: "luggage-travel-gear",
+      
+    },
   ];
