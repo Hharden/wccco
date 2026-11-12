@@ -12,6 +12,8 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+const safeCategoryTree = Array.isArray(CATEGORY_TREE) ? CATEGORY_TREE : [];
+
 // Helper function to dynamically read all guides/articles from content/articles
 async function getFeaturedGuides() {
   const articlesDirectory = path.join(process.cwd(), "app", "content", "articles");
@@ -48,23 +50,23 @@ function getCategoryTitle(
   subcategory?: string
 ) {
   if (subcategory) {
-    for (const sec of CATEGORY_TREE) {
-      for (const cat of sec.categories) {
-        const foundSub = cat.subcategories.find((s) => s.slug === subcategory);
+    for (const sec of safeCategoryTree) {
+      for (const cat of sec?.categories || []) {
+        const foundSub = (cat?.subcategories || []).find((s) => s.slug === subcategory);
         if (foundSub) return foundSub.name;
       }
     }
   }
 
   if (category) {
-    for (const sec of CATEGORY_TREE) {
-      const foundCat = sec.categories.find((c) => c.slug === category);
+    for (const sec of safeCategoryTree) {
+      const foundCat = (sec?.categories || []).find((c) => c.slug === category);
       if (foundCat) return foundCat.name;
     }
   }
 
   if (section) {
-    const foundSec = CATEGORY_TREE.find((s) => s.slug === section);
+    const foundSec = safeCategoryTree.find((s) => s.slug === section);
     if (foundSec) return foundSec.name;
   }
 
@@ -83,9 +85,9 @@ export async function generateMetadata({
 }) {
   const resolvedParams = await searchParams;
   const pageTitle = getCategoryTitle(
-    resolvedParams.section,
-    resolvedParams.category,
-    resolvedParams.subcategory
+    resolvedParams?.section,
+    resolvedParams?.category,
+    resolvedParams?.subcategory
   );
 
   return {
@@ -105,7 +107,7 @@ export default async function Home({
   }>;
 }) {
   const resolvedParams = await searchParams;
-  const { section, category, subcategory } = resolvedParams;
+  const { section, category, subcategory } = resolvedParams || {};
 
   // Resolve active header title from category tree
   const currentTitle = getCategoryTitle(section, category, subcategory);
@@ -157,9 +159,9 @@ export default async function Home({
     fullUrl: string;
   }[] = [];
 
-  CATEGORY_TREE.forEach((sec) => {
-    sec.categories.forEach((cat) => {
-      cat.subcategories.forEach((sub) => {
+  safeCategoryTree.forEach((sec) => {
+    (sec?.categories || []).forEach((cat) => {
+      (cat?.subcategories || []).forEach((sub) => {
         subcategoryList.push({
           sectionSlug: sec.slug,
           categorySlug: cat.slug,
@@ -347,9 +349,6 @@ export default async function Home({
           <p className="text-xs text-neutral-500">No products available in this subcategory right now.</p>
         )}
       </section>
-
-
-      
 
     </main>
   );
