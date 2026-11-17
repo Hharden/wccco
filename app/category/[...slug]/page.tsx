@@ -1,8 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import ProductCard from "../../../components/ProductCard";
-import { CATEGORY_TREE } from "../../../app/constants/categories";
+import ProductCard from "@/components/ProductCard";
+import { CATEGORY_TREE } from "@/app/constants/categories";
 
 export const revalidate = 60;
 
@@ -15,9 +15,9 @@ function getCategoryDetailsFromSlugPath(slugPath: string[]) {
   const targetSlug = slugPath[slugPath.length - 1];
 
   // 1. Subcategory lookup
-  for (const section of CATEGORY_TREE) {
-    for (const category of section.categories) {
-      const sub = category.subcategories.find((s) => s.slug === targetSlug);
+  for (const section of CATEGORY_TREE || []) {
+    for (const category of section.categories || []) {
+      const sub = category.subcategories?.find((s) => s.slug === targetSlug);
       if (sub) {
         return {
           title: sub.name,
@@ -29,8 +29,8 @@ function getCategoryDetailsFromSlugPath(slugPath: string[]) {
   }
 
   // 2. Parent Category lookup
-  for (const section of CATEGORY_TREE) {
-    const cat = section.categories.find((c) => c.slug === targetSlug);
+  for (const section of CATEGORY_TREE || []) {
+    const cat = section.categories?.find((c) => c.slug === targetSlug);
     if (cat) {
       return {
         title: cat.name,
@@ -41,7 +41,7 @@ function getCategoryDetailsFromSlugPath(slugPath: string[]) {
   }
 
   // 3. Top-Level Section lookup
-  const sec = CATEGORY_TREE.find((s) => s.slug === targetSlug);
+  const sec = CATEGORY_TREE?.find((s) => s.slug === targetSlug);
   if (sec) {
     return {
       title: sec.name,
@@ -86,7 +86,7 @@ export default async function CategoryPage({
   const { slug } = await params;
   const details = getCategoryDetailsFromSlugPath(slug);
 
-  // Extract raw slug segments from URL route: /category/mens/mens-clothing/mens-jackets-coats
+  // Extract raw slug segments from URL route
   const rawSection = slug[0];
   const rawCategory = slug[1];
   const rawSubcategory = slug[2] || slug[1] || slug[0];
