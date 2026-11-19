@@ -10,7 +10,6 @@ function HeaderContent() {
   const router = useRouter();
   const [activeSection, setActiveSection] = useState<string | null>(null);
 
-  // Navigates using clean dynamic route paths for SEO
   const handleNavigate = (section: string, category?: string, subcategory?: string) => {
     if (section === "all") {
       router.push("/");
@@ -49,7 +48,7 @@ function HeaderContent() {
           </div>
         </div>
 
-        {/* Navigation Bar Row (Categories + Articles & Guides) */}
+        {/* Navigation Bar Row */}
         <div className="flex items-center gap-1 py-2 overflow-x-visible border-t border-neutral-100">
           <button
             onClick={() => handleNavigate("all")}
@@ -105,7 +104,20 @@ function HeaderContent() {
             </div>
           ))}
 
-          {/* Articles & Guides placed on the same line */}
+          <Link
+            href="/brands"
+            className="px-3 py-1.5 rounded-md text-xs font-medium text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900 transition whitespace-nowrap"
+          >
+            Brands
+          </Link>
+
+          <Link
+            href="/tags"
+            className="px-3 py-1.5 rounded-md text-xs font-medium text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900 transition whitespace-nowrap"
+          >
+            Tags
+          </Link>
+
           <Link
             href="/articles"
             className="px-3 py-1.5 rounded-md text-xs font-medium text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900 transition whitespace-nowrap"
