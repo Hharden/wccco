@@ -25,9 +25,9 @@ export interface Subcategory {
           slug: "mens-clothing",
           subcategories: [
             { name: "Men's Jackets & Coats", slug: "mens-jackets-coats" },
+            { name: "Men's Pants & Shorts", slug: "mens-pants-shorts" },
             { name: "Men's Shirts & Tops", slug: "mens-shirts-tops" },
             { name: "Men's Sweatshirts & Hoodies", slug: "mens-sweatshirts-hoodies" },
-            { name: "Men's Pants & Shorts", slug: "mens-pants-shorts" },
           ],
         },
         {
@@ -56,6 +56,7 @@ export interface Subcategory {
           slug: "womens-clothing",
           subcategories: [
             { name: "Women's Coats, Jackets & Vests", slug: "womens-coats-jackets-vests" },
+            { name: "Women's Dresses", slug: "womens-dresses" },
             { name: "Women's Pants", slug: "womens-pants" },
             { name: "Women's Shorts", slug: "womens-shorts" },
             { name: "Women's Socks", slug: "womens-socks" },
@@ -73,7 +74,6 @@ export interface Subcategory {
           name: "Women's Accessories",
           slug: "womens-accessories",
           subcategories: [
-            { name: "Women's Bags & Tote", slug: "womens-bags-totes" },
             { name: "Women's Hats", slug: "womens-hats" },
           ],
         },
