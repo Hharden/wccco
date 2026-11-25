@@ -28,6 +28,7 @@ export interface Subcategory {
             { name: "Men's Pants & Shorts", slug: "mens-pants-shorts" },
             { name: "Men's Shirts & Tops", slug: "mens-shirts-tops" },
             { name: "Men's Sweatshirts & Hoodies", slug: "mens-sweatshirts-hoodies" },
+            { name: "Men's Underwear, Boxers & Briefs", slug: "mens-underwear-boxers-briefs" },
           ],
         },
         {
