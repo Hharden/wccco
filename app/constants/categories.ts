@@ -37,6 +37,7 @@ export interface Subcategory {
           subcategories: [
             { name: "Men's Belts", slug: "mens-belts" },
             { name: "Men's Hats & Caps", slug: "mens-hats-caps" },
+            { name: "Men's Gloves & Mittens", slug: "mens-gloves-mittens" },
             { name: "Men's Bags & Packs", slug: "mens-bags-packs" },
           ],
         },
